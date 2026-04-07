@@ -3,7 +3,7 @@ from PyPDF2 import PdfReader
 import pytesseract
 from pdf2image import convert_from_bytes
 
-# Set path (important for Windows)
+
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 st.title(" Smart PDF Reader (Text + OCR)")
