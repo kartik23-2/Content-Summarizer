@@ -37,7 +37,7 @@ def load_md(file):
 
 def load_excel(file):
     df = pd.read_excel(file)
-    return df.to_string()
+    return df.to_csv(index=False)
 
 
 def load_file(file):
