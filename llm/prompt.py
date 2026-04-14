@@ -20,7 +20,8 @@ def question_prompt(text):
 def qa_prompt(context, question):
     return f"""
     Answer the question strictly based on the context below.
-    If the answer is not in the context, say "Not found in document".
+    If the answer is not in the context, say "Not found in document
+    ".
 
     Context:
     {context}
