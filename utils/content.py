@@ -1,73 +1,56 @@
 from PyPDF2 import PdfReader
-import pytesseract
-from pdf2image import convert_from_bytes
+import requests
 import pandas as pd
+import streamlit as st
 
-
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+OCR_API_KEY = st.secrets["OCR_API_KEY"]
 
 
 def load_pdf(file):
     text = ""
 
-    try:
-        reader = PdfReader(file)
-        for page in reader.pages:
-            extracted = page.extract_text()
-            if extracted:
-                text += extracted + "\n"
-    except Exception as e:
-        print("PDF read error:", e)
+    # Try extracting normal text
+    reader = PdfReader(file)
+    for page in reader.pages:
+        extracted = page.extract_text()
+        if extracted:
+            text += extracted + "\n"
 
-    # OCR fallback for scanned PDFs or if text extraction fails
+    # If no text → use OCR API
     if len(text.strip()) < 50:
+        file.seek(0)
+
+        response = requests.post(
+            "https://api.ocr.space/parse/image",
+            files={"file": file},
+            data={
+                "apikey": OCR_API_KEY,
+                "language": "eng"
+            }
+        )
+
+        result = response.json()
+
         try:
-            file.seek(0)
-            images = convert_from_bytes(file.read(), dpi=300)
-
+            text = result["ParsedResults"][0]["ParsedText"]
+        except:
             text = ""
-            for img in images:
-                text += pytesseract.image_to_string(img) + "\n"
 
-        except Exception as e:
-            print("OCR error:", e)
-
-    return text.strip()
-
+    return text
 
 
 def load_txt(file):
-    try:
-        return file.read().decode("utf-8")
-    except:
-        file.seek(0)
-        return file.read().decode("latin-1")
-
-
-
-def load_md(file):
-    return load_txt(file)
-
+    return file.read().decode("utf-8", errors="ignore")
 
 
 def load_excel(file):
-    try:
-        df = pd.read_excel(file)
-        return df.to_string(index=False)
-    except Exception as e:
-        print("Excel error:", e)
-        return ""
-
+    df = pd.read_excel(file)
+    return df.to_string(index=False)
 
 
 def load_csv(file):
-    try:
-        df = pd.read_csv(file)
-        return df.to_string(index=False)
-    except Exception as e:
-        print("CSV error:", e)
-        return ""
-
+    df = pd.read_csv(file)
+    return df.to_string(index=False)
 
 
 def load_file(file):
@@ -76,11 +59,8 @@ def load_file(file):
     if file_type == "pdf":
         return load_pdf(file)
 
-    elif file_type in ["txt"]:
+    elif file_type == "txt":
         return load_txt(file)
-
-    elif file_type in ["md"]:
-        return load_md(file)
 
     elif file_type in ["xls", "xlsx"]:
         return load_excel(file)
@@ -89,4 +69,4 @@ def load_file(file):
         return load_csv(file)
 
     else:
-        return " Unsupported file type"
+        return "Unsupported file type"
