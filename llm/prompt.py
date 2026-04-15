@@ -2,15 +2,33 @@ def summary_prompt(text):
     return f"""
     You are an expert academic assistant.
 
-    Summarize the following document in a clear, structured, and consistent format.
+    Summarize the following document in a clear, structured, and point-wise format.
 
-    Instructions:
-    - Give a well-organized summary
-    - Cover all major topics present in the document
-    - Keep it concise but informative
-    - Use paragraphs (not bullet points)
-    - Maintain consistency in tone and structure
-    - Do not skip important concepts
+    Follow this format STRICTLY:
+
+    1. Overview:
+       - Give a brief 2-3 line overview of what the document is about.
+
+    2. Key Topics Covered:
+       - List all major topics and concepts present in the document.
+
+    3. Detailed Summary:
+       - Explain each major topic in points
+       - Keep explanations clear and concise
+       - Cover definitions, properties, and important ideas
+
+    4. Important Concepts / Theorems:
+       - Highlight key formulas, properties, or theorems
+
+    5. Exam Focus / Usage:
+       - Mention how this document is useful for exams or learning
+
+    Rules:
+    - Use bullet points wherever possible
+    - Do not skip important sections
+    - Keep it structured and easy to read
+    - Avoid unnecessary long paragraphs
+
     Document:
     {text}
 
