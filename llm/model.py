@@ -1,6 +1,6 @@
 
 import os
-from time import time
+import time
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -13,7 +13,7 @@ api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
 model = genai.GenerativeModel(
-    "gemini-2.0-flash",
+    "gemini-2.5-flash-lite",
     generation_config={
         "temperature": 0.2,   
         "top_p": 0.8,
@@ -22,9 +22,8 @@ model = genai.GenerativeModel(
     )
 
 def ask_llm(prompt):
-    try:
+    
         time.sleep(4)  # ⏱️ Prevent rate limit
         response = model.generate_content(prompt)
         return response.text
-    except Exception as e:
-        return "⚠️ API limit reached or error occurred. Please try again."
+    

@@ -2,8 +2,17 @@ from PyPDF2 import PdfReader
 import requests
 import pandas as pd
 import streamlit as st
+import os
+from dotenv import load_dotenv
 
-OCR_API_KEY = st.secrets["OCR_API_KEY"]
+load_dotenv()
+
+
+def get_ocr_api_key():
+    try:
+        return st.secrets.get("OCR_API_KEY") or os.getenv("OCR_API_KEY")
+    except Exception:
+        return os.getenv("OCR_API_KEY")
 
 
 def load_pdf(file):
@@ -18,13 +27,18 @@ def load_pdf(file):
 
     # If no text → use OCR API
     if len(text.strip()) < 50:
+        ocr_api_key = get_ocr_api_key()
+        if not ocr_api_key:
+            st.warning("OCR_API_KEY is missing. Scanned PDFs may return empty text.")
+            return text
+
         file.seek(0)
 
         response = requests.post(
             "https://api.ocr.space/parse/image",
             files={"file": file},
             data={
-                "apikey": OCR_API_KEY,
+                "apikey": ocr_api_key,
                 "language": "eng"
             }
         )

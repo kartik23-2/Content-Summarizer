@@ -8,7 +8,7 @@ from rag.vector import VectorStore
 from rag.retriever import retrieve
 
 from llm.model import ask_llm
-from llm.prompt import summary_prompt, question_prompt, qa_prompt
+from llm.prompt import summary_prompt, qa_prompt
 
 st.set_page_config(page_title="AI Study Assistant", layout="wide")
 
@@ -17,34 +17,31 @@ st.title(" AI Study Assistant")
 uploaded_file = st.file_uploader("Upload PDF", type="pdf")
 
 if uploaded_file:
-    
-    raw_text = load_file(uploaded_file)
+    file_key = f"{uploaded_file.name}_{uploaded_file.size}"
 
-   #summary
-    with st.spinner("Generating summary..."):
-        summary = ask_llm(summary_prompt(raw_text))
+    if st.session_state.get("processed_file_key") != file_key:
+        raw_text = load_file(uploaded_file)
+
+        with st.spinner("Generating summary..."):
+            summary = ask_llm(summary_prompt(raw_text))
+
+        chunks = simple_chunk(raw_text)
+        embeddings = get_embeddings(chunks)
+
+        store = VectorStore(len(embeddings[0]))
+        store.add(embeddings, chunks)
+
+        st.session_state.processed_file_key = file_key
+        st.session_state.raw_text = raw_text
+        st.session_state.summary = summary
+        st.session_state.store = store
 
     st.subheader(" Summary")
-    st.write(summary)
-
-    
-    chunks = simple_chunk(raw_text)
-    embeddings = get_embeddings(chunks)
-
-    store = VectorStore(len(embeddings[0]))
-    store.add(embeddings, chunks)
-
+    st.write(st.session_state.summary)
     st.success(" Document processed! Ready to interact")
 
-    #questions
-    if st.button(" Generate Questions"):
-        with st.spinner("Generating questions..."):
-            questions = ask_llm(question_prompt(raw_text))
+    store = st.session_state.store
 
-        st.subheader(" Generated Questions")
-        st.write(questions)
-
-   
     query = st.text_input(" Ask a question about the document")
 
     if query:
