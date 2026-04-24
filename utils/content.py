@@ -14,7 +14,30 @@ def get_ocr_api_key():
     except Exception:
         return os.getenv("OCR_API_KEY")
 
+def extract_text_with_ocr(file):
+    ocr_api_key = get_ocr_api_key()
+    if not ocr_api_key:
+        st.warning("OCR_API_KEY is missing. OCR for scanned PDFs/images may return empty text.")
+        return ""
 
+    file.seek(0)
+
+    try:
+        response = requests.post(
+            "https://api.ocr.space/parse/image",
+            files={"file": file},
+            data={
+                "apikey": ocr_api_key,
+                "language": "eng"
+            },
+            timeout=60
+        )
+        response.raise_for_status()
+        result = response.json()
+        return result.get("ParsedResults", [{}])[0].get("ParsedText", "") or ""
+    except Exception:
+        return ""
+    
 def load_pdf(file):
     text = ""
 
@@ -27,30 +50,12 @@ def load_pdf(file):
 
     # If no text → use OCR API
     if len(text.strip()) < 50:
-        ocr_api_key = get_ocr_api_key()
-        if not ocr_api_key:
-            st.warning("OCR_API_KEY is missing. Scanned PDFs may return empty text.")
-            return text
-
-        file.seek(0)
-
-        response = requests.post(
-            "https://api.ocr.space/parse/image",
-            files={"file": file},
-            data={
-                "apikey": ocr_api_key,
-                "language": "eng"
-            }
-        )
-
-        result = response.json()
-
-        try:
-            text = result["ParsedResults"][0]["ParsedText"]
-        except:
-            text = ""
+        text = extract_text_with_ocr(file)
 
     return text
+
+def load_image(file):
+    return extract_text_with_ocr(file)
 
 
 def load_txt(file):
@@ -81,6 +86,9 @@ def load_file(file):
 
     elif file_type == "csv":
         return load_csv(file)
+    
+    elif file_type in ["jpg", "jpeg", "png"]:
+        return load_image(file)
 
     else:
         return "Unsupported file type"

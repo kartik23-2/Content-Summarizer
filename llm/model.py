@@ -23,7 +23,7 @@ model = genai.GenerativeModel(
 
 def ask_llm(prompt):
     
-        time.sleep(4)  # ⏱️ Prevent rate limit
+        time.sleep(4)  # Prevent rate limit
         response = model.generate_content(prompt)
         return response.text
     
