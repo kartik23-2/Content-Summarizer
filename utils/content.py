@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -87,7 +88,7 @@ def load_file(file):
     elif file_type == "csv":
         return load_csv(file)
     
-    elif file_type in ["jpg", "jpeg", "png"]:
+    elif file_type in ["jpg", "jpeg", "png", "webp"]:
         return load_image(file)
 
     else:
