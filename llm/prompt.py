@@ -1,8 +1,20 @@
 def summary_prompt(text):
     return f"""
-    Summarize the following document clearly and concisely:
+    You are an expert academic assistant.
 
+    Summarize the following document in a clear, structured, and consistent format.
+
+    Instructions:
+    - Give a well-organized summary
+    - Cover all major topics present in the document
+    - Keep it concise but informative
+    - Use paragraphs (not bullet points)
+    - Maintain consistency in tone and structure
+    - Do not skip important concepts
+    Document:
     {text}
+
+    Summary:
     """
 
 
