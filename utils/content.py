@@ -1,0 +1,92 @@
+from PyPDF2 import PdfReader
+import pytesseract
+from pdf2image import convert_from_bytes
+import pandas as pd
+
+
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+
+def load_pdf(file):
+    text = ""
+
+    try:
+        reader = PdfReader(file)
+        for page in reader.pages:
+            extracted = page.extract_text()
+            if extracted:
+                text += extracted + "\n"
+    except Exception as e:
+        print("PDF read error:", e)
+
+    
+    if len(text.strip()) < 50:
+        try:
+            file.seek(0)
+            images = convert_from_bytes(file.read(), dpi=300)
+
+            text = ""
+            for img in images:
+                text += pytesseract.image_to_string(img) + "\n"
+
+        except Exception as e:
+            print("OCR error:", e)
+
+    return text.strip()
+
+
+
+def load_txt(file):
+    try:
+        return file.read().decode("utf-8")
+    except:
+        file.seek(0)
+        return file.read().decode("latin-1")
+
+
+
+def load_md(file):
+    return load_txt(file)
+
+
+
+def load_excel(file):
+    try:
+        df = pd.read_excel(file)
+        return df.to_string(index=False)
+    except Exception as e:
+        print("Excel error:", e)
+        return ""
+
+
+
+def load_csv(file):
+    try:
+        df = pd.read_csv(file)
+        return df.to_string(index=False)
+    except Exception as e:
+        print("CSV error:", e)
+        return ""
+
+
+
+def load_file(file):
+    file_type = file.name.split(".")[-1].lower()
+
+    if file_type == "pdf":
+        return load_pdf(file)
+
+    elif file_type in ["txt"]:
+        return load_txt(file)
+
+    elif file_type in ["md"]:
+        return load_md(file)
+
+    elif file_type in ["xls", "xlsx"]:
+        return load_excel(file)
+
+    elif file_type == "csv":
+        return load_csv(file)
+
+    else:
+        return " Unsupported file type"
