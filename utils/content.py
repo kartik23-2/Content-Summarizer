@@ -19,7 +19,7 @@ def load_pdf(file):
     except Exception as e:
         print("PDF read error:", e)
 
-    
+    # OCR fallback for scanned PDFs or if text extraction fails
     if len(text.strip()) < 50:
         try:
             file.seek(0)
