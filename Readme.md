@@ -1,6 +1,6 @@
 # 📄 AI Study Assistant (RAG-based)
 
-An intelligent document assistant that allows users to **upload files (PDF, TXT, Excel, etc.)** and interact with them using **AI-powered summarization, question generation, and Q&A**.
+An intelligent document assistant that allows users to **upload files (PDF, TXT, Excel, etc.)** and interact with them using **AI-powered summarization and Q&A**.
 
 ---
 
@@ -14,17 +14,7 @@ An intelligent document assistant that allows users to **upload files (PDF, TXT,
 
 ---
 
-### 🎯 2. Question Generator
-
-* Click a button to generate:
-
-  * ✅ 10 meaningful questions
-  * ✅ Conceptual + factual mix
-* Helps in revision and self-testing
-
----
-
-### 🤖 3. Ask Anything (Q&A)
+### 🤖 2. Ask Anything (Q&A)
 
 * Ask any question related to the document
 * Uses **RAG (Retrieval-Augmented Generation)** for:
@@ -34,7 +24,7 @@ An intelligent document assistant that allows users to **upload files (PDF, TXT,
 
 ---
 
-### 📂 4. Multi-File Support
+### 📂 3. Multi-File Support
 
 Supports:
 
@@ -61,14 +51,9 @@ Embeddings (Hugging Face)
     ↓
 Vector Store (FAISS)
     ↓
-        ┌───────────────┐
-        │               │
-   Summary         Questions
- (Full Text)      (Full Text)
-        │               │
-        └───────┬───────┘
-                ↓
-          Q&A System (RAG)
+            Summary (Full Text)
+              ↓
+            Q&A System (RAG)
                 ↓
             LLM (Gemini)
                 ↓
@@ -139,6 +124,7 @@ Create a `.env` file:
 
 ```
 GEMINI_API_KEY=your_api_key_here
+OCR_API_KEY=your_ocr_space_api_key_here
 ```
 
 ---
@@ -156,6 +142,7 @@ streamlit run app.py
 | Variable       | Description            |
 | -------------- | ---------------------- |
 | GEMINI_API_KEY | API key for Gemini LLM |
+| OCR_API_KEY    | API key for OCR.Space  |
 
 ---
 
@@ -183,14 +170,7 @@ User uploads any supported file.
 
 ---
 
-### 🔹 Step 4: Question Generation
-
-* Full text → Gemini
-* Output: 10 questions
-
----
-
-### 🔹 Step 5: Q&A (RAG)
+### 🔹 Step 4: Q&A (RAG)
 
 ```
 User Question
@@ -221,17 +201,6 @@ Document: "Operating Systems Notes"
 ```
 This document explains process scheduling, memory management,
 and deadlocks in operating systems...
-```
-
----
-
-#### 🔹 Generated Questions
-
-```
-1. What is process scheduling?
-2. Explain deadlock conditions.
-3. What is paging in memory management?
-...
 ```
 
 ---

@@ -36,17 +36,6 @@ def summary_prompt(text):
     """
 
 
-def question_prompt(text):
-    return f"""
-    Generate 10 meaningful questions from the following document.
-
-    Only output questions.
-    Make them diverse (conceptual + factual).
-
-    {text}
-    """
-
-
 def qa_prompt(context, question):
     return f"""
    You are an intelligent assistant answering questions based on a document.
