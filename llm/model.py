@@ -12,7 +12,7 @@ api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
 model = genai.GenerativeModel(
-    "gemini-1.5-flash-latest",
+    "gemini-flash-latest",
     generation_config={
         "temperature": 0.2,   
         "top_p": 0.8,
