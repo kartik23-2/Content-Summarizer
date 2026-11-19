@@ -1,5 +1,6 @@
 
 import os
+from time import time
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -21,5 +22,9 @@ model = genai.GenerativeModel(
     )
 
 def ask_llm(prompt):
-    response = model.generate_content(prompt)
-    return response.text
+    try:
+        time.sleep(4)  # ⏱️ Prevent rate limit
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return "⚠️ API limit reached or error occurred. Please try again."
