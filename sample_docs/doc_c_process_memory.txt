@@ -1,0 +1,43 @@
+================================================================================
+DOCUMENT C: PROCESS MANAGEMENT, MEMORY & CONCURRENCY
+Author: Operating Systems Core Architecture Curriculum
+Topic: Process Life Cycle, Deadlock Prevention, and Performance Metrics
+================================================================================
+
+1. DEADLOCK DEFINITION AND CONCEPTS
+In a multiprogramming environment, several processes may compete for a finite number of resources. A process requests resources; if the resources are not available at that time, the process enters a waiting state. Sometimes, a waiting process is never again able to change state, because the resources it has requested are held by other waiting processes.
+
+A deadlock in operating systems is formally defined as a situation where a set of processes are blocked because each process is holding a resource and waiting for another resource held by some other process in the same set. Neither process can proceed, execute, or terminate, leading to permanent starvation of system execution.
+
+2. THE FOUR NECESSARY CONDITIONS FOR DEADLOCK
+A deadlock situation can arise if and only if the following four conditions hold simultaneously in a system:
+
+Condition 1: Mutual Exclusion
+At least one resource must be held in a non-shareable mode. That is, only one process at a time can use the resource. If another process requests that resource, the requesting process must be delayed until the resource has been released.
+
+Condition 2: Hold and Wait
+A process must be currently holding at least one resource and simultaneously waiting to acquire additional resources that are currently being held by other processes.
+
+Condition 3: No Preemption
+Resources cannot be preempted. That is, a resource can be released only voluntarily by the process holding it, after that process has completed its task. The operating system cannot forcibly seize the resource.
+
+Condition 4: Circular Wait
+A closed chain of processes exists such that each process holds at least one resource that is needed by the next process in the chain. Specifically, a set {P0, P1, ..., Pn} of waiting processes must exist such that P0 is waiting for a resource held by P1, P1 is waiting for a resource held by P2, and Pn is waiting for a resource held by P0.
+
+3. THE FIVE BASIC PROCESS STATES
+As a process executes, it changes state. The life cycle of a process consists of five fundamental states:
+1. New: The process is in the stage of being created and initialized by the operating system.
+2. Ready: The process is loaded into main memory and is waiting to be assigned to a central processing unit (CPU) by the scheduler.
+3. Running: Instructions are being executed directly on the CPU core.
+4. Waiting (or Blocked): The process is waiting for some external event to occur, such as the completion of an I/O transfer or the receipt of a signal.
+5. Terminated: The process has finished its execution and its data structures and address space are being deallocated.
+
+4. SYSTEM BENCHMARK MEASUREMENTS: TABLE 3.1
+The following execution metrics were logged under controlled benchmark conditions for the reference process workload:
+
+[BEGIN TABLE 3.1: WORKLOAD EXECUTION PROFILES]
+Task Identifier | Task Category   | Execution Time | Priority Level | Memory Allocated
+Task A          | Image Transform | 12ms           | High           | 64 MB
+Task B          | Audio Filter    | 8ms            | Normal         | 32 MB
+Task C          | Matrix Multiply | 15ms           | Low            | 128 MB
+[END TABLE 3.1]
