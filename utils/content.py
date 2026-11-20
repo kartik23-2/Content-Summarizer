@@ -1,95 +1,117 @@
-from PyPDF2 import PdfReader
-import requests
-import pandas as pd
-import streamlit as st
 import os
-from dotenv import load_dotenv
-from pathlib import Path
+import re
+import unicodedata
+from PyPDF2 import PdfReader
+from PyPDF2.errors import PdfReadError
 
-load_dotenv()
 
-
-def get_ocr_api_key():
-    try:
-        return st.secrets.get("OCR_API_KEY") or os.getenv("OCR_API_KEY")
-    except Exception:
-        return os.getenv("OCR_API_KEY")
-
-def extract_text_with_ocr(file):
-    ocr_api_key = get_ocr_api_key()
-    if not ocr_api_key:
-        st.warning("OCR_API_KEY is missing. OCR for scanned PDFs/images may return empty text.")
+def normalize_text(text: str) -> str:
+    """Normalize unicode, collapse whitespace, and strip carriage returns."""
+    if not text:
         return ""
+    # Unicode NFKD normalization
+    text = unicodedata.normalize("NFKD", text)
+    # Replace carriage returns and excessive whitespace
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Collapse 3+ newlines to 2
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    # Collapse multiple inline spaces/tabs to a single space
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
 
-    file.seek(0)
+
+def load_file_content(file_obj_or_path, filename: str) -> dict:
+    """
+    Load and parse a document (PDF or TXT) into page-level text.
+    Handles corrupt, empty, and image-only/scanned files gracefully.
+    
+    Returns:
+    {
+        "filename": filename,
+        "doc_id": safe_doc_id,
+        "pages": [{"page_number": int, "text": str}],
+        "total_chars": int,
+        "warning": str | None,
+        "error": str | None
+    }
+    """
+    safe_doc_id = re.sub(r"[^a-zA-Z0-9_]", "_", filename).lower()
+    ext = filename.split(".")[-1].lower() if "." in filename else ""
+
+    result = {
+        "filename": filename,
+        "doc_id": safe_doc_id,
+        "pages": [],
+        "total_chars": 0,
+        "warning": None,
+        "error": None
+    }
 
     try:
-        response = requests.post(
-            "https://api.ocr.space/parse/image",
-            files={"file": file},
-            data={
-                "apikey": ocr_api_key,
-                "language": "eng"
-            },
-            timeout=60
-        )
-        response.raise_for_status()
-        result = response.json()
-        return result.get("ParsedResults", [{}])[0].get("ParsedText", "") or ""
-    except Exception:
-        return ""
-    
-def load_pdf(file):
-    text = ""
+        if ext == "pdf":
+            try:
+                reader = PdfReader(file_obj_or_path)
+            except PdfReadError as pe:
+                result["error"] = f"Corrupt or encrypted PDF: {pe}"
+                return result
+            except Exception as e:
+                result["error"] = f"Failed to parse PDF: {e}"
+                return result
 
-    # Try extracting normal text
-    reader = PdfReader(file)
-    for page in reader.pages:
-        extracted = page.extract_text()
-        if extracted:
-            text += extracted + "\n"
+            if reader.is_encrypted:
+                try:
+                    reader.decrypt("")
+                except Exception:
+                    result["error"] = "Password-protected PDF cannot be read without password."
+                    return result
 
-    # If no text → use OCR API
-    if len(text.strip()) < 50:
-        text = extract_text_with_ocr(file)
+            for page_idx, page in enumerate(reader.pages, start=1):
+                try:
+                    page_text = page.extract_text() or ""
+                except Exception:
+                    page_text = ""
+                clean_page = normalize_text(page_text)
+                result["pages"].append({
+                    "page_number": page_idx,
+                    "text": clean_page
+                })
+                result["total_chars"] += len(clean_page)
 
-    return text
+            # Check for low-text / scanned PDF
+            avg_chars = result["total_chars"] / max(len(result["pages"]), 1)
+            if result["total_chars"] < 50 or avg_chars < 30:
+                result["warning"] = (
+                    f"Warning: '{filename}' contains very little extractable text "
+                    f"({result['total_chars']} characters across {len(result['pages'])} pages). "
+                    "The document appears to be scanned or image-based."
+                )
 
-def load_image(file):
-    return extract_text_with_ocr(file)
+        elif ext in ["txt", "md"]:
+            content = ""
+            if hasattr(file_obj_or_path, "read"):
+                raw_bytes = file_obj_or_path.read()
+                if isinstance(raw_bytes, str):
+                    content = raw_bytes
+                else:
+                    content = raw_bytes.decode("utf-8", errors="ignore")
+            elif isinstance(file_obj_or_path, str) and os.path.exists(file_obj_or_path):
+                with open(file_obj_or_path, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
 
+            clean_text = normalize_text(content)
+            result["pages"].append({
+                "page_number": 1,
+                "text": clean_text
+            })
+            result["total_chars"] = len(clean_text)
 
-def load_txt(file):
-    return file.read().decode("utf-8", errors="ignore")
+            if result["total_chars"] == 0:
+                result["warning"] = f"Warning: '{filename}' is empty."
 
+        else:
+            result["error"] = f"Unsupported file format: '.{ext}'. Supported formats are PDF and TXT."
 
-def load_excel(file):
-    df = pd.read_excel(file)
-    return df.to_string(index=False)
+    except Exception as e:
+        result["error"] = f"Unexpected error reading '{filename}': {str(e)}"
 
-
-def load_csv(file):
-    df = pd.read_csv(file)
-    return df.to_string(index=False)
-
-
-def load_file(file):
-    file_type = file.name.split(".")[-1].lower()
-
-    if file_type == "pdf":
-        return load_pdf(file)
-
-    elif file_type == "txt":
-        return load_txt(file)
-
-    elif file_type in ["xls", "xlsx"]:
-        return load_excel(file)
-
-    elif file_type == "csv":
-        return load_csv(file)
-    
-    elif file_type in ["jpg", "jpeg", "png", "webp"]:
-        return load_image(file)
-
-    else:
-        return "Unsupported file type"
+    return result
