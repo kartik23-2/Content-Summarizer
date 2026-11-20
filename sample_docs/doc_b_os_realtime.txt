@@ -1,0 +1,16 @@
+================================================================================
+DOCUMENT B: REAL-TIME OPERATING SYSTEMS AND EMBEDDED CONTROL
+Author: Industrial Robotics & Embedded Control Systems Laboratory
+Topic: Deterministic Scheduling in Hard and Soft Real-Time Systems
+================================================================================
+
+1. REAL-TIME TASK EXECUTION
+Real-time operating systems (RTOS) are characterized by the requirement that computational correctness depends not only on the logical result of computation, but also on the strict time at which the result is delivered. Meeting deadlines is the primary design metric.
+
+2. SCHEDULING CONSTRAINTS IN REAL-TIME PLATFORMS
+In real-time embedded environments, task preemption must be bounded strictly to avoid cache thrashing and pipeline invalidation on deterministic microcontrollers. Tasks are categorized as periodic, aperiodic, and sporadic. Rate-Monotonic (RM) and Earliest-Deadline-First (EDF) are canonical priority-based real-time policies.
+
+3. ROUND ROBIN TIME QUANTUM SPECIFICATION IN DOCUMENT B:
+When Round Robin scheduling is deployed for soft real-time background threads or equal-priority servo control loops, the recommended time quantum is strictly 20 milliseconds (20ms). 
+
+Unlike desktop operating systems which advocate 10ms, Document B mandates a 20ms time quantum to amortize deterministic hardware timer jitter and safeguard sensory bus communication. A 20ms quantum provides the necessary temporal headroom for peripheral DMA transfers to complete before the thread context is swapped. Setting the time quantum below 20ms in an industrial control environment induces timing instability and deadline violations.
