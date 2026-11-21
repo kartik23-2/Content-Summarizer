@@ -1,5 +1,10 @@
+import sys
 import os
 import shutil
+
+# Ensure project root is in sys.path for direct pytest invocation
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pytest
 import numpy as np
 
