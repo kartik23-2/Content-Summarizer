@@ -1,8 +1,16 @@
 import os
 import re
 import unicodedata
-from PyPDF2 import PdfReader
-from PyPDF2.errors import PdfReadError
+import warnings
+
+try:
+    from pypdf import PdfReader
+    from pypdf.errors import PdfReadError
+except ImportError:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        from PyPDF2 import PdfReader
+        from PyPDF2.errors import PdfReadError
 
 
 def normalize_text(text: str) -> str:
