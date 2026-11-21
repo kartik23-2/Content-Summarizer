@@ -2,8 +2,13 @@ import os
 import re
 import json
 import time
+import warnings
 from dotenv import load_dotenv
-import google.generativeai as genai
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", (FutureWarning, DeprecationWarning))
+    import google.generativeai as genai
+
 from google.api_core.exceptions import ResourceExhausted, GoogleAPIError
 
 load_dotenv()
