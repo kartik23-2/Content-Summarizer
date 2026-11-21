@@ -6,6 +6,22 @@ The system integrates **calibrated dual-threshold relevance gating**, **strict c
 
 ---
 
+## 📑 Assessment Deliverables Directory
+
+| Requirement # | Assessment Deliverable | File / Location | Description |
+| :---: | :--- | :--- | :--- |
+| **1** | **Source Code** | [`app.py`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/app.py), [`rag/`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/rag/), [`llm/`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/llm/), [`utils/`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/utils/) | Complete, modular, and fully executable RAG implementation. |
+| **2** | **Project README** | [`Readme.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/Readme.md) | Overview, tech stack, dependencies, setup, and usage steps. |
+| **3** | **Architecture Diagram** | [Architecture Diagram](#-system-architecture) | Complete RAG pipeline flowchart and data interaction flow. |
+| **4** | **Demonstration Video Script** | [`video_script.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/video_script.md) | Timed 4:30–5:00 minute script with visual actions and voiceover. |
+| **5** | **Testing Suite** | [`tests/test_rag.py`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/tests/test_rag.py), [`sample_docs/`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/sample_docs/) | 9 automated pytest tests covering unit, failure, and edge cases. |
+| **6** | **Technical Decision Log** | [`technical_decisions.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/technical_decisions.md) | Deep dive into 3 core architectural decisions and trade-offs. |
+| **7** | **Evaluation Report** | [`evaluation_report.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/evaluation_report.md) | Comprehensive 10-query benchmark results, hit rates, and scores. |
+| **8** | **Known Limitations** | [`limitations.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/limitations.md) | Algorithmic boundaries, failure modes, and production scaling roadmap. |
+| **9** | **AI Tool Disclosure** | [`ai_disclosure.md`](file:///c:/Users/karti/OneDrive/Desktop/Content%20Summarizer/ai_disclosure.md) | Transparent disclosure of AI coding assistants and engineering oversight. |
+
+---
+
 ## 🚀 Key Features
 
 - **📂 Heterogeneous Multi-Document Ingestion**:
@@ -13,7 +29,7 @@ The system integrates **calibrated dual-threshold relevance gating**, **strict c
   - Page-level text extraction with character offsets, Unicode normalization, and corrupt/encrypted PDF handling.
   - Automatic detection of image-only / low-text scanned documents with graceful fallback alerts.
 - **✂️ Recursive Semantic Chunking**:
-  - 800-character chunks with 150-character overlap preserving topic continuity and sentence boundaries.
+  - 800–900 character chunks with 150-character overlap preserving topic continuity and sentence boundaries.
   - Structured metadata schema `{chunk_id, doc_id, filename, page, char_start, char_end}`.
 - **⚡ Normalized Vector Database with FAISS**:
   - `sentence-transformers/all-MiniLM-L6-v2` dense embeddings.
@@ -46,7 +62,7 @@ flowchart TD
         B -->|Check Text Density| C{Scanned/Empty PDF?}
         C -- Yes --> D[Clean Warning / Low-Text Fallback]
         C -- No --> E[Extract Text & Page Metadata]
-        E --> F[Recursive Semantic Chunking: 800 chars / 150 overlap]
+        E --> F[Recursive Semantic Chunking: 800-900 chars / 150 overlap]
         F --> G[Near-Duplicate Suppression: Sim > 0.97]
     end
 
@@ -75,7 +91,7 @@ flowchart TD
     subgraph Generation ["4. Grounded Generation & Validation"]
         V --> X[Inject Context with Chunk IDs]
         W --> X
-        X --> Y[Call LLM: Gemini 2.5 Flash]
+        X --> Y[Call LLM: Gemini 2.5 Flash / Lite]
         Y --> Z[Parse Structured JSON: answerable, answer, cited_chunk_ids]
         Z --> AA{Validate Cited IDs in Retrieved Set?}
         AA -- Discard Invalid IDs --> AB[Resolve Chunk IDs to Filename & Page]
@@ -95,6 +111,9 @@ Content Summarizer/
 ├── implementation.md          # Architectural implementation plan & gap analysis
 ├── technical_decisions.md     # Deep dive into 3 core architectural decisions
 ├── evaluation_report.md       # Comprehensive benchmark evaluation report
+├── video_script.md            # Complete 5-minute video demonstration script
+├── limitations.md             # Documented limitations and production scaling roadmap
+├── ai_disclosure.md           # Transparent AI coding assistant disclosure
 ├── requirements.txt           # Python dependencies
 │
 ├── sample_docs/               # Benchmark test document collection
@@ -105,7 +124,7 @@ Content Summarizer/
 │
 ├── utils/
 │   ├── content.py             # Multi-document loader, text cleaner, exception handler
-│   └── chunks.py              # 800-char recursive chunker with metadata tracking
+│   └── chunks.py              # Recursive chunker with metadata tracking
 │
 ├── rag/
 │   ├── embedder.py            # SentenceTransformer wrapper with L2 normalization
@@ -113,7 +132,7 @@ Content Summarizer/
 │   └── retriever.py           # Dual-threshold relevance gating & diversity cap
 │
 ├── llm/
-│   ├── model.py               # Gemini client with exponential backoff & JSON validation
+│   ├── model.py               # Gemini client with fallback models & JSON validation
 │   ├── prompt.py              # Closed-domain grounded prompts & chunk-ID schema
 │   ├── conversation.py        # Sliding-window memory & heuristic query condenser
 │   └── cache.py               # Document-scoped semantic query cache
@@ -145,7 +164,7 @@ pip install -r requirements.txt
 Create or verify `.env` in the root directory:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-2.5-flash-lite
 SIMILARITY_HARD_FLOOR=0.30
 SIMILARITY_CONFIDENT_THRESHOLD=0.50
 ```
@@ -164,7 +183,7 @@ Verifies text normalization, page loading, scan warnings, chunk metadata schemas
 ```bash
 python evaluate.py
 ```
-Executes all 10 representative test queries against `sample_docs/`, logging similarity scores, gate decisions, LLM calls, retrieval hit rate, and faithfulness scores into `evaluation_results.json`.
+Executes all 10 representative test queries against `sample_docs/`, logging similarity scores, gate decisions, LLM calls, retrieval hit rate, and faithfulness scores.
 
 ---
 
