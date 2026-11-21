@@ -1,4 +1,58 @@
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except Exception:
+    class RecursiveCharacterTextSplitter:
+        """Standalone fallback recursive character text splitter."""
+        def __init__(self, chunk_size: int = 800, chunk_overlap: int = 150, separators: list[str] = None):
+            self.chunk_size = chunk_size
+            self.chunk_overlap = chunk_overlap
+            self.separators = separators or ["\n\n", "\n", ". ", "? ", "! ", " ", ""]
+
+        def split_text(self, text: str) -> list[str]:
+            if not text:
+                return []
+            
+            # Recursive splitting
+            def _split(txt: str, seps: list[str]) -> list[str]:
+                if not seps or len(txt) <= self.chunk_size:
+                    return [txt] if txt else []
+                
+                sep = seps[0]
+                remaining_seps = seps[1:]
+                
+                if sep == "":
+                    # Character level split
+                    return [txt[i:i + self.chunk_size] for i in range(0, len(txt), self.chunk_size - self.chunk_overlap)]
+                
+                splits = txt.split(sep)
+                result = []
+                for s in splits:
+                    if len(s) > self.chunk_size:
+                        result.extend(_split(s, remaining_seps))
+                    elif s:
+                        result.append(s)
+                return result
+
+            raw_pieces = _split(text, self.separators)
+            
+            # Merge into chunks respecting chunk_size and chunk_overlap
+            merged = []
+            current = ""
+            for piece in raw_pieces:
+                if not current:
+                    current = piece
+                elif len(current) + len(piece) + 1 <= self.chunk_size:
+                    current += " " + piece
+                else:
+                    merged.append(current.strip())
+                    # Overlap retention
+                    overlap_start = max(0, len(current) - self.chunk_overlap)
+                    current = current[overlap_start:] + " " + piece
+
+            if current.strip():
+                merged.append(current.strip())
+
+            return merged
 
 
 def chunk_document(doc_data: dict, chunk_size: int = 800, chunk_overlap: int = 150) -> list[dict]:
